@@ -10,20 +10,24 @@
 #include <functional>
 #include <opencv\cv.h>
 #include <opencv2\imgproc.hpp>
+#include <opencv2\imgcodecs.hpp>
 #include <iostream>
 #include <math.h>
 
 #define MPI 3.141592
 #define	DEGREE2RADIAN(_X) ((_X) / 180 * MPI)
+#define RADIAN2DEGREE(_X) ((180.0/MPI) * _X)
 
 using namespace std;
 
+void meridian_fitting_test();
 void fill_sca_data_hrk();
 void fill_sca_data_cvs_002();
 void fill_sca_data_cvs_004();
 void fill_sca_data_cvs_005();
 void fill_sample_data();
 void calc_sca_ellipse(double CVS_meridian[3], double CVS_sca[4]);
+
 void humaneye_compensate_test();
 void humaneye_compensate(double sph, double cyl, double *tsph, double *tcyl);
 auto getPowerForMeridians(double s, double c, double radian)->tuple<double, double, double>;
@@ -32,6 +36,79 @@ vector<pair<double, double>> s_sampleDataList;
 vector<tuple<double, double, double>> s_scaDataList;
 
 int main()
+{
+	vector<tuple<double, double, double>> meridianList = {
+		{ -3.00, -2.45, -2.75 },
+		{ -3.02, -2.42, -2.79 },
+		{ -3.03, -2.43, -2.75 },
+		{ -3.10, -2.55, -2.36 },
+		{ -3.11, -2.53, -2.38 },
+		{ -3.08, -2.56, -2.39 },
+		{ -0.81, -1.02, -1.10 },
+		{ -0.74, -0.94, -1.01 },
+		{ -0.67, -0.89, -0.93 },
+		{ -0.96, -0.82, -0.77 },
+		{ -0.94, -0.88, -0.76 },
+		{ -1.11, -0.96, -0.90 },
+		{ -5.94, -6.19, -6.37 },
+		{ -5.91, -6.17, -6.29 },
+		{ -5.90, -6.14, -6.25 },
+		{ -6.14, -7.16, -7.21 },
+		{ -6.13, -7.13, -7.19 },
+		{ -6.14, -7.14, -7.25 },
+		{ -4.90, -5.77, -5.61 },
+		{ -4.88, -5.75, -5.59 },
+		{ -4.88, -5.75, -5.62 },
+		{ -2.81, -3.62, -3.38 },
+		{ -2.82, -3.63, -3.39 },
+		{ -2.81, -3.60, -3.40 },
+		{ -4.22, -3.89, -4.37 },
+		{ -4.09, -3.76, -4.27 },
+		{ -4.07, -3.74, -4.22 },
+		{ -3.03, -3.48, -2.93 },
+		{ -3.06, -3.47, -2.95 },
+		{ -3.11, -3.50, -3.01 },
+	};
+
+	for (auto item : meridianList) {
+		double CVS_meridian[3];
+		
+		CVS_meridian[0] = get<0>(item);
+		CVS_meridian[1] = get<1>(item);
+		CVS_meridian[2] = get<2>(item);
+		
+		double CVS_sca[4] = { 0.0, };
+
+		calc_sca_ellipse(CVS_meridian, CVS_sca);
+
+		auto s = CVS_sca[0];
+		auto c = CVS_sca[1];
+		auto a = (int)RADIAN2DEGREE(CVS_sca[2]);
+
+		stringbuf strBuf;
+		ostream os(&strBuf);
+
+		os << "[";
+		os << CVS_meridian[0];
+		os << ", ";
+		os << CVS_meridian[1];
+		os << ", ";
+		os << CVS_meridian[2];
+		os << "] -> [";
+		os << s;
+		os << ", ";
+		os << c;
+		os << ", ";
+		os << a;
+		os << "]\r\n";
+
+		cout << strBuf.str();
+	}
+
+	return 0;
+}
+
+void meridian_fitting_test()
 {
 	//fill_sca_data_hrk();
 	//fill_sca_data_cvs_002();
@@ -87,8 +164,6 @@ int main()
 	ofstream ofs("D:/TTT/cvs_result.txt");
 	ofs << contents;
 	ofs.close();
-
-	return 0;
 }
 
 auto getPowerForMeridians(double s, double c, double radian)->tuple<double, double, double>
